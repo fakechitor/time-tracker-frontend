@@ -85,8 +85,19 @@ body {
   cursor: pointer;
 }
 
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .auth-submit:hover {
   background: #4264dd;
+}
+
+.auth-error {
+  margin: 0;
+  font-size: 13px;
+  color: #ff8f8f;
 }
 
 .auth-secondary {
@@ -103,4 +114,99 @@ body {
 
 .auth-secondary a:hover {
   text-decoration: underline;
+}
+
+.main-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.main-sidebar {
+  border-right: 1px solid #2a3142;
+  background: #121722;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-sidebar-top {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f1f4ff;
+}
+
+.user-box {
+  margin-top: auto;
+  position: relative;
+}
+
+.user-trigger {
+  width: 100%;
+  border: 1px solid #39445c;
+  background: #0f1420;
+  color: #eaf0ff;
+  height: 42px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.user-trigger:hover {
+  border-color: #506282;
+}
+
+.user-menu {
+  position: absolute;
+  left: 0;
+  bottom: 50px;
+  width: 100%;
+  background: #1a2232;
+  border: 1px solid #2e3950;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.logout-button {
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  height: 36px;
+  background: #2a3348;
+  color: #f1f4ff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-button:hover {
+  background: #364462;
+}
+
+.main-content {
+  padding: 28px;
+}
+
+.main-title {
+  margin: 0;
+  font-size: 28px;
+  color: #f1f4ff;
+}
+
+.main-error {
+  margin: 16px 0 0;
+  color: #ff8f8f;
+}
+
+@media (max-width: 900px) {
+  .main-page {
+    grid-template-columns: 1fr;
+  }
+
+  .main-sidebar {
+    min-height: 120px;
+    border-right: none;
+    border-bottom: 1px solid #2a3142;
+  }
 }

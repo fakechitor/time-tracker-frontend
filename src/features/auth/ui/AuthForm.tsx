@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ApiError } from '../../../shared/api/http'
+import { login, register } from '../api/authApi'
+import { saveTokens } from '../lib/tokenStorage'
 
 type AuthMode = 'login' | 'register'
 
@@ -24,6 +27,9 @@ const initialState: FormState = {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const [form, setForm] = useState<FormState>(initialState)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const content = useMemo(() => {
     if (mode === 'register') {
@@ -50,10 +56,36 @@ export function AuthForm({ mode }: AuthFormProps) {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // TODO: wire API integration in features/auth/api.
-    console.log(`${mode} form`, form)
+    setErrorMessage(null)
+    setIsSubmitting(true)
+
+    try {
+      const tokens =
+        mode === 'register'
+          ? await register({
+              username: form.name,
+              email: form.email,
+              password: form.password,
+              confirmed_password: form.confirmPassword,
+            })
+          : await login({
+              email: form.email,
+              password: form.password,
+            })
+
+      saveTokens(tokens)
+      navigate('/app')
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('Unexpected error, try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -63,13 +95,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         <form className="auth-form" onSubmit={onSubmit}>
           {mode === 'register' ? (
             <label className="auth-field">
-              <span>Name</span>
+              <span>Username</span>
               <input
-                autoComplete="name"
+                autoComplete="username"
                 name="name"
                 type="text"
                 value={form.name}
                 onChange={onChange}
+                minLength={3}
                 required
               />
             </label>
@@ -95,6 +128,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               type="password"
               value={form.password}
               onChange={onChange}
+              minLength={6}
               required
             />
           </label>
@@ -108,13 +142,16 @@ export function AuthForm({ mode }: AuthFormProps) {
                 type="password"
                 value={form.confirmPassword}
                 onChange={onChange}
+                minLength={6}
                 required
               />
             </label>
           ) : null}
 
-          <button className="auth-submit" type="submit">
-            {content.submitLabel}
+          {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
+
+          <button className="auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Please wait...' : content.submitLabel}
           </button>
         </form>
         <p className="auth-secondary">
