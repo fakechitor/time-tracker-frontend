@@ -297,6 +297,7 @@ body {
   padding: 10px;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 10px;
 }
 
@@ -332,6 +333,99 @@ body {
 .status.queued {
   background: #4c4c4c;
   color: #f0f0f0;
+}
+
+.task-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.task-time-badge {
+  border: 1px solid #4b5f8f;
+  border-radius: 999px;
+  background: #263a66;
+  color: #e6efff;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 92px;
+  text-align: center;
+  padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-status-select {
+  border-radius: 6px;
+  border: 1px solid #34405a;
+  background: #171f2c;
+  color: #e9eeff;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.task-delete-button {
+  border: 1px solid #634056;
+  border-radius: 6px;
+  background: #3b2734;
+  color: #ffdce8;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.task-delete-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.task-create-form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 180px 120px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.task-create-form input,
+.task-create-form select {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #34405a;
+  background: #171f2c;
+  color: #e9eeff;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.task-create-form button {
+  border: none;
+  border-radius: 8px;
+  background: #3f68ff;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.task-create-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.tasks-error {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #ff9ea8;
+}
+
+.tasks-note {
+  margin: 0;
+  font-size: 13px;
+  color: #aab6d4;
 }
 
 .timer-box {
@@ -398,6 +492,12 @@ body {
   filter: brightness(1.08);
 }
 
+.timer-controls button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: none;
+}
+
 .timer-controls button.active {
   transform: none;
   box-shadow: 0 3px 8px rgba(33, 59, 140, 0.2);
@@ -428,6 +528,11 @@ body {
   cursor: pointer;
   box-shadow: 0 3px 8px rgba(33, 59, 140, 0.2);
   text-align: left;
+}
+
+.timer-task-link:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .timer-task-picker {
@@ -477,6 +582,12 @@ body {
   background: #2c3a5e;
 }
 
+.timer-error {
+  margin: 6px 0 0;
+  color: #ffb3b3;
+  font-size: 13px;
+}
+
 .page-panel {
   width: 100%;
 }
@@ -486,24 +597,117 @@ body {
   gap: 10px;
 }
 
+.report-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.report-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.report-filters span {
+  color: #c7d1eb;
+  font-size: 13px;
+}
+
+.report-filters input {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid #34405a;
+  background: #171f2c;
+  color: #e9eeff;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.report-filters button {
+  align-self: end;
+  border: none;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 14px;
+  background: #3f68ff;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.report-filters button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .history-row {
   border: 1px solid #313c55;
   background: #1d2636;
   border-radius: 8px;
-  padding: 10px;
+  overflow: hidden;
+}
+
+.history-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #dce6ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.history-toggle span:last-child {
+  color: #b6c4ea;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-body {
+  border-top: 1px solid #313c55;
+  padding: 10px 12px 12px;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
-.history-row span {
-  color: #92a0c7;
-  font-size: 12px;
-}
-
-.history-row p {
+.history-body p {
   margin: 0;
   color: #d6def4;
   font-size: 13px;
+}
+
+.history-sublist {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.history-entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #34405a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #171f2c;
+}
+
+.history-entry span {
+  color: #aab6d4;
+  font-size: 12px;
+}
+
+.history-entry strong {
+  color: #e8eeff;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .settings-list {
@@ -570,8 +774,29 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .report-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .history-entry {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .task-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .task-row {
+    flex-direction: column;
+  }
+
+  .task-row-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .dashboard-header {

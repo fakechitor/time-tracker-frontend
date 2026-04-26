@@ -8,7 +8,7 @@ export class ApiError extends Error {
   }
 }
 
-type RequestInitWithBody = Omit<RequestInit, 'body'> & {
+export type RequestInitWithBody = Omit<RequestInit, 'body'> & {
   body?: unknown
 }
 

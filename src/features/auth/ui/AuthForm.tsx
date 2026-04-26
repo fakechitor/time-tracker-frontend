@@ -18,6 +18,8 @@ type FormState = {
   confirmPassword: string
 }
 
+const TIMER_STATE_KEY = 'time-tracker-timer-state-v1'
+
 const initialState: FormState = {
   name: '',
   email: '',
@@ -76,6 +78,9 @@ export function AuthForm({ mode }: AuthFormProps) {
             })
 
       saveTokens(tokens)
+      if (mode === 'register') {
+        localStorage.removeItem(TIMER_STATE_KEY)
+      }
       navigate('/app')
     } catch (error) {
       if (error instanceof ApiError) {
