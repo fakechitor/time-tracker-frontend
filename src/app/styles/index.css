@@ -751,6 +751,75 @@ body {
   height: 16px;
 }
 
+.archive-open-button {
+  border: 1px solid #4b5f8f;
+  border-radius: 8px;
+  background: #1d2c4d;
+  color: #c8d8ff;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.archive-open-button:hover {
+  background: #253660;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+}
+
+.modal-panel {
+  background: #161d2a;
+  border: 1px solid #2d3650;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #f1f4ff;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: #8a96b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.modal-close:hover {
+  background: #252f47;
+  color: #dce6ff;
+}
+
 @media (max-width: 980px) {
   .dashboard-page {
     grid-template-columns: 1fr;

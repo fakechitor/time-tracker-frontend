@@ -10,7 +10,7 @@ import { getActiveTimer, startTimer, stopTimer } from '../../features/timers/api
 import { listTimeEntries } from '../../features/time-entries/api/timeEntriesApi'
 import type { TimeEntry } from '../../features/time-entries/model/types'
 
-type MainView = 'tasks' | 'history' | 'settings'
+type MainView = 'tasks' | 'history'
 type TimerMode = 'running' | 'paused' | 'stopped'
 type TaskFilter = 'all' | TaskStatus
 type SortOption = 'created_desc' | 'created_asc' | 'updated_desc' | 'title_asc' | 'status_asc'
@@ -124,6 +124,8 @@ export function MainPage() {
   })
   const [isSavingTimeEntry, setSavingTimeEntry] = useState(false)
   const [timerSaveError, setTimerSaveError] = useState<string | null>(null)
+
+  // History (completed tasks) state
   const [historyFromDate, setHistoryFromDate] = useState('')
   const [historyToDate, setHistoryToDate] = useState(() => toDateInputValue(new Date()))
   const [expandedHistoryTaskId, setExpandedHistoryTaskId] = useState<string | null>(null)
@@ -131,6 +133,13 @@ export function MainPage() {
   const [isHistoryEntriesLoading, setHistoryEntriesLoading] = useState(false)
   const [historyEntriesError, setHistoryEntriesError] = useState<string | null>(null)
   const [historyFilterVersion, setHistoryFilterVersion] = useState(0)
+
+  // Archive modal state
+  const [isArchiveModalOpen, setArchiveModalOpen] = useState(false)
+  const [expandedArchiveTaskId, setExpandedArchiveTaskId] = useState<string | null>(null)
+  const [archiveEntries, setArchiveEntries] = useState<TimeEntry[]>([])
+  const [isArchiveEntriesLoading, setArchiveEntriesLoading] = useState(false)
+  const [archiveEntriesError, setArchiveEntriesError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isTimerRunning) {
@@ -504,6 +513,7 @@ export function MainPage() {
     setHistoryFilterVersion((prev) => prev + 1)
   }
 
+  // Load time entries for the history (completed) panel
   useEffect(() => {
     if (activeView !== 'history' || !expandedHistoryTaskId) {
       return
@@ -555,8 +565,63 @@ export function MainPage() {
     }
   }, [activeView, expandedHistoryTaskId, historyFromDate, historyToDate, historyFilterVersion, navigate])
 
+  // Load time entries for the archive modal
+  useEffect(() => {
+    if (!isArchiveModalOpen || !expandedArchiveTaskId) {
+      return
+    }
+
+    let isMounted = true
+    setArchiveEntriesLoading(true)
+    setArchiveEntriesError(null)
+
+    const loadEntries = async () => {
+      try {
+        const response = await listTimeEntries({
+          task_id: expandedArchiveTaskId,
+          sort_by: 'started_at',
+          order: 'desc',
+          limit: 200,
+          offset: 0,
+        })
+        if (!isMounted) {
+          return
+        }
+        setArchiveEntries(response.time_entries)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+        if (error instanceof ApiError && error.status === 401) {
+          clearTokens()
+          navigate('/login', { replace: true })
+          return
+        }
+        setArchiveEntriesError(error instanceof ApiError ? error.message : 'Не удалось загрузить записи времени')
+      } finally {
+        if (isMounted) {
+          setArchiveEntriesLoading(false)
+        }
+      }
+    }
+
+    void loadEntries()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isArchiveModalOpen, expandedArchiveTaskId, navigate])
+
+  const handleCloseArchiveModal = () => {
+    setArchiveModalOpen(false)
+    setExpandedArchiveTaskId(null)
+    setArchiveEntries([])
+    setArchiveEntriesError(null)
+  }
+
   const selectedTaskLabel = tasks.find((task) => task.id === selectedTaskId)?.title ?? EMPTY_TASK_OPTION
   const visibleTasks = tasks.filter((task) => taskFilter === 'all' || task.status === taskFilter)
+  const completedTasks = tasks.filter((task) => task.status === 'completed')
   const archivedTasks = tasks.filter((task) => task.status === 'archived')
 
   const getStatusLabel = (status: TaskStatus) => {
@@ -566,7 +631,7 @@ export function MainPage() {
     if (status === 'completed') {
       return 'Выполнено'
     }
-    return 'В архиве'
+    return 'Отложено'
   }
 
   const getStatusClassName = (status: TaskStatus) => {
@@ -590,21 +655,14 @@ export function MainPage() {
             className={activeView === 'tasks' ? 'active' : ''}
             onClick={() => setActiveView('tasks')}
           >
-            {'\u0417\u0430\u0434\u0430\u0447\u0438'}
+            {'Задачи'}
           </button>
           <button
             type="button"
             className={activeView === 'history' ? 'active' : ''}
             onClick={() => setActiveView('history')}
           >
-            {'\u0418\u0441\u0442\u043E\u0440\u0438\u044F'}
-          </button>
-          <button
-            type="button"
-            className={activeView === 'settings' ? 'active' : ''}
-            onClick={() => setActiveView('settings')}
-          >
-            {'\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438'}
+            {'История'}
           </button>
         </nav>
 
@@ -619,7 +677,7 @@ export function MainPage() {
           {isUserMenuOpen ? (
             <div className="dashboard-user-menu">
               <button type="button" onClick={handleLogout}>
-                {'\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0430'}
+                {'Выйти из аккаунта'}
               </button>
             </div>
           ) : null}
@@ -639,7 +697,7 @@ export function MainPage() {
                 }}
                 disabled={isSavingTimeEntry}
               >
-                {'\u0421\u0442\u0430\u0440\u0442'}
+                {'Старт'}
               </button>
               <button
                 type="button"
@@ -649,7 +707,7 @@ export function MainPage() {
                 }}
                 disabled={isSavingTimeEntry}
               >
-                {'\u041F\u0430\u0443\u0437\u0430'}
+                {'Пауза'}
               </button>
               <button
                 type="button"
@@ -659,7 +717,7 @@ export function MainPage() {
                 }}
                 disabled={isSavingTimeEntry}
               >
-                {'\u0421\u0442\u043E\u043F'}
+                {'Стоп'}
               </button>
             </div>
 
@@ -684,7 +742,7 @@ export function MainPage() {
                   >
                     {EMPTY_TASK_OPTION}
                   </button>
-                  {tasks.map((task) => (
+                  {tasks.filter((task) => task.status === 'active').map((task) => (
                     <button
                       type="button"
                       key={task.id}
@@ -716,7 +774,7 @@ export function MainPage() {
                 <option value="all">Все статусы</option>
                 <option value="active">В работе</option>
                 <option value="completed">Выполнено</option>
-                <option value="archived">В архиве</option>
+                <option value="archived">Отложено</option>
               </select>
               <select value={sortOption} onChange={(event) => setSortOption(event.target.value as SortOption)}>
                 <option value="created_desc">Сначала новые</option>
@@ -754,7 +812,7 @@ export function MainPage() {
                   >
                     <option value="active">В работе</option>
                     <option value="completed">Выполнено</option>
-                    <option value="archived">В архиве</option>
+                    <option value="archived">Отложено</option>
                   </select>
                   <button type="submit" disabled={isCreatingTask}>
                     {isCreatingTask ? 'Создание...' : 'Добавить'}
@@ -786,7 +844,7 @@ export function MainPage() {
                         >
                           <option value="active">В работе</option>
                           <option value="completed">Выполнено</option>
-                          <option value="archived">В архиве</option>
+                          <option value="archived">Отложено</option>
                         </select>
                         <button
                           type="button"
@@ -808,7 +866,14 @@ export function MainPage() {
         {activeView === 'history' ? (
           <section className="panel page-panel">
             <div className="panel-head">
-              <h2>{'\u0418\u0441\u0442\u043E\u0440\u0438\u044F'}</h2>
+              <h2>{'История'}</h2>
+              <button
+                type="button"
+                className="archive-open-button"
+                onClick={() => setArchiveModalOpen(true)}
+              >
+                {`Архив (${archivedTasks.length})`}
+              </button>
             </div>
             <form className="report-filters" onSubmit={handleApplyHistoryFilter}>
               <label>
@@ -826,10 +891,10 @@ export function MainPage() {
               <button type="submit">Применить</button>
             </form>
 
-            {archivedTasks.length === 0 ? <p className="tasks-note">Архивных задач пока нет</p> : null}
+            {completedTasks.length === 0 ? <p className="tasks-note">Выполненных задач пока нет</p> : null}
 
             <div className="history-list">
-              {archivedTasks.map((task) => {
+              {completedTasks.map((task) => {
                 const isExpanded = expandedHistoryTaskId === task.id
                 return (
                   <article key={task.id} className="history-row">
@@ -876,34 +941,79 @@ export function MainPage() {
           </section>
         ) : null}
 
-        {activeView === 'settings' ? (
-          <section className="panel page-panel">
-            <div className="panel-head">
-              <h2>{'\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438'}</h2>
-            </div>
-            <div className="settings-list">
-              <label className="settings-row">
-                <span>{'\u0424\u043E\u0440\u043C\u0430\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u0438'}</span>
-                <select defaultValue="24h">
-                  <option value="24h">24h</option>
-                  <option value="12h">12h</option>
-                </select>
-              </label>
-              <label className="settings-row">
-                <span>{'\u0421\u0442\u0430\u0440\u0442 \u043D\u0435\u0434\u0435\u043B\u0438'}</span>
-                <select defaultValue="monday">
-                  <option value="monday">{'\u041F\u043E\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u0438\u043A'}</option>
-                  <option value="sunday">{'\u0412\u043E\u0441\u043A\u0440\u0435\u0441\u0435\u043D\u044C\u0435'}</option>
-                </select>
-              </label>
-              <label className="settings-check">
-                <input type="checkbox" defaultChecked />
-                <span>{'\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u044F\u0442\u044C \u043E \u0434\u043B\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u0438 \u0441\u0435\u0441\u0441\u0438\u0438'}</span>
-              </label>
-            </div>
-          </section>
-        ) : null}
       </section>
+
+      {isArchiveModalOpen ? (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseArchiveModal()
+            }
+          }}
+        >
+          <div className="modal-panel">
+            <div className="modal-head">
+              <h2>{'Архив'}</h2>
+              <button type="button" className="modal-close" onClick={handleCloseArchiveModal} aria-label="Закрыть">
+                {'✕'}
+              </button>
+            </div>
+
+            {archivedTasks.length === 0 ? (
+              <p className="tasks-note">{'Отложенных задач пока нет'}</p>
+            ) : null}
+
+            <div className="history-list">
+              {archivedTasks.map((task) => {
+                const isExpanded = expandedArchiveTaskId === task.id
+                return (
+                  <article key={task.id} className="history-row">
+                    <button
+                      type="button"
+                      className="history-toggle"
+                      onClick={() => {
+                        setArchiveEntriesError(null)
+                        setArchiveEntries([])
+                        setExpandedArchiveTaskId((prev) => (prev === task.id ? null : task.id))
+                      }}
+                    >
+                      <span>{task.title}</span>
+                      <span>{formatTimer(task.total_time)}</span>
+                    </button>
+
+                    {isExpanded ? (
+                      <div className="history-body">
+                        <p>{task.description || 'Без описания'}</p>
+                        <p>{`Создана: ${formatDateTime(task.created_at)}`}</p>
+                        <p>{`Обновлена: ${formatDateTime(task.updated_at)}`}</p>
+
+                        {archiveEntriesError ? <p className="tasks-error">{archiveEntriesError}</p> : null}
+                        {isArchiveEntriesLoading ? <p className="tasks-note">Загрузка записей...</p> : null}
+                        {!isArchiveEntriesLoading && archiveEntries.length === 0 ? (
+                          <p className="tasks-note">Записей времени не найдено</p>
+                        ) : null}
+
+                        <div className="history-sublist">
+                          {archiveEntries.map((entry) => (
+                            <div key={entry.id} className="history-entry">
+                              <span>{formatDateTime(entry.started_at)}</span>
+                              <span>{formatDateTime(entry.ended_at)}</span>
+                              <strong>{formatTimer(entry.duration_sec)}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
